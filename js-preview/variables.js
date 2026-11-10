@@ -14,7 +14,7 @@ console.log(schoolname , score , PI ) ;
 
 
 // ข้อมูลนักศึกษา ชื่อ นามสกุล อายุ ระดับชั้น สถานะนักศึกษา  ศึกษา อยู่ หรือ ออก
-const studentName = "Pakawat Suwannakerd";       
+const studentName = "kittakan konpipat";       
 const Age = 20;            
 const level = "ปวส.2";            
 const isStudent = true;           
