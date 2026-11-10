@@ -14,24 +14,23 @@ datasource db {
 }
 
 model Student {
-  id          Int          @id @default(autoincrement())
-  name        String       @db.VarChar(50)
-  age         Int
-  major       String       @db.VarChar(50)
-  createdAt   DateTime     @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(50)
+  age       Int
+  major     String   @db.VarChar(50)
+  createdAt DateTime @default(now())
 }
 
 // ข้อมูลรายวิชา
-model Course {
+model Subject {
   id             Int      @id @default(autoincrement())
-  courseCode     String   @unique @db.VarChar(20)  // รหัสวิชา
-  courseName     String   @db.VarChar(150)         // ชื่อวิชา
-  objective      String   @db.Text                 // วัตถุประสงค์รายวิชา
-  description    String   @db.Text                 // คำอธิบายรายวิชา
-  theoryHours    Int                               // ท (ชั่วโมงทฤษฎี)
-  practiceHours  Int                               // ป (ชั่วโมงปฏิบัติ)
-  selfStudyHours Int                               // น (ชั่วโมงศึกษาด้วยตนเอง)
-  instructor     String   @db.VarChar(100)         // ครูผู้สอน
+  subjectCode    String   @unique @db.VarChar(20) // รหัสวิชา
+  subjectName    String   @db.VarChar(150) // ชื่อวิชา
+  objective      String   @db.Text // วัตถุประสงค์รายวิชา
+  description    String   @db.Text // คำอธิบายรายวิชา
+  theoryHours    Int // ท (ชั่วโมงทฤษฎี)
+  practiceHours  Int // ป (ชั่วโมงปฏิบัติ)
+  selfStudyHours Int // น (ชั่วโมงศึกษาด้วยตนเอง)
+  instructor     String   @db.VarChar(100) // ครูผู้สอน
   createdAt      DateTime @default(now())
 }
-

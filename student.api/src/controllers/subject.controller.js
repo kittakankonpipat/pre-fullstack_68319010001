@@ -2,8 +2,8 @@ const prisma = require("../prisma");
 
 // ตรวจสอบและแปลงข้อมูลรายวิชาจาก req.body
 // รับ ท-ป-น ได้ 2 แบบ: แยกฟิลด์ theoryHours/practiceHours/selfStudyHours หรือ hours: "2-2-5"
-function parseCourse(body) {
-  let { courseCode, courseName, objective, description, theoryHours, practiceHours, selfStudyHours, instructor, hours } = body;
+function parseSubject(body) {
+  let { subjectCode, subjectName, objective, description, theoryHours, practiceHours, selfStudyHours, instructor, hours } = body;
 
   if (hours !== undefined && hours !== null && hours !== "") {
     const parts = String(hours).split("-").map((s) => s.trim());
@@ -13,7 +13,7 @@ function parseCourse(body) {
     [theoryHours, practiceHours, selfStudyHours] = parts;
   }
 
-  const textFields = { courseCode, courseName, objective, description, instructor };
+  const textFields = { subjectCode, subjectName, objective, description, instructor };
   for (const [key, value] of Object.entries(textFields)) {
     if (typeof value !== "string" || value.trim() === "") {
       return { error: `กรุณากรอกข้อมูลให้ครบ (${key})` };
@@ -32,8 +32,8 @@ function parseCourse(body) {
 
   return {
     data: {
-      courseCode: courseCode.trim(),
-      courseName: courseName.trim(),
+      subjectCode: subjectCode.trim(),
+      subjectName: subjectName.trim(),
       objective: objective.trim(),
       description: description.trim(),
       instructor: instructor.trim(),
@@ -43,10 +43,10 @@ function parseCourse(body) {
 }
 
 // เพิ่มฟิลด์ hours ("ท-ป-น") ในผลลัพธ์ เพื่อให้หน้าเว็บแสดงผลได้ง่าย
-function withHours(course) {
+function withHours(subject) {
   return {
-    ...course,
-    hours: `${course.theoryHours}-${course.practiceHours}-${course.selfStudyHours}`,
+    ...subject,
+    hours: `${subject.theoryHours}-${subject.practiceHours}-${subject.selfStudyHours}`,
   };
 }
 
@@ -56,50 +56,50 @@ function parseId(param) {
 }
 
 // ดึงข้อมูลทั้งหมด และค้นหาจากรหัสวิชา / ชื่อวิชา / ครูผู้สอน
-exports.getAllCourses = async (req, res) => {
+exports.getAllSubjects = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const courses = await prisma.course.findMany({
+    const subjects = await prisma.subject.findMany({
       where: search
         ? {
             OR: [
-              { courseCode: { contains: search } },
-              { courseName: { contains: search } },
+              { subjectCode: { contains: search } },
+              { subjectName: { contains: search } },
               { instructor: { contains: search } },
             ],
           }
         : undefined,
       orderBy: { id: "asc" },
     });
-    res.json(courses.map(withHours));
+    res.json(subjects.map(withHours));
   } catch {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 // ดึงข้อมูลรายวิชาเดียว
-exports.getCourseById = async (req, res) => {
+exports.getSubjectById = async (req, res) => {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: "รหัสอ้างอิงไม่ถูกต้อง" });
 
-    const course = await prisma.course.findUnique({ where: { id } });
-    if (!course) return res.status(404).json({ message: "ไม่พบรายวิชา" });
+    const subject = await prisma.subject.findUnique({ where: { id } });
+    if (!subject) return res.status(404).json({ message: "ไม่พบรายวิชา" });
 
-    res.json(withHours(course));
+    res.json(withHours(subject));
   } catch {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 // เพิ่มรายวิชา
-exports.createCourse = async (req, res) => {
+exports.createSubject = async (req, res) => {
   try {
-    const { data, error } = parseCourse(req.body || {});
+    const { data, error } = parseSubject(req.body || {});
     if (error) return res.status(400).json({ message: error });
 
-    const course = await prisma.course.create({ data });
-    res.status(201).json(withHours(course));
+    const subject = await prisma.subject.create({ data });
+    res.status(201).json(withHours(subject));
   } catch (err) {
     if (err.code === "P2002") {
       return res.status(409).json({ message: "รหัสวิชานี้มีอยู่แล้ว" });
@@ -109,16 +109,16 @@ exports.createCourse = async (req, res) => {
 };
 
 // แก้ไขรายวิชา
-exports.updateCourse = async (req, res) => {
+exports.updateSubject = async (req, res) => {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: "รหัสอ้างอิงไม่ถูกต้อง" });
 
-    const { data, error } = parseCourse(req.body || {});
+    const { data, error } = parseSubject(req.body || {});
     if (error) return res.status(400).json({ message: error });
 
-    const course = await prisma.course.update({ where: { id }, data });
-    res.json(withHours(course));
+    const subject = await prisma.subject.update({ where: { id }, data });
+    res.json(withHours(subject));
   } catch (err) {
     if (err.code === "P2025") return res.status(404).json({ message: "ไม่พบรายวิชา" });
     if (err.code === "P2002") return res.status(409).json({ message: "รหัสวิชานี้มีอยู่แล้ว" });
@@ -127,13 +127,13 @@ exports.updateCourse = async (req, res) => {
 };
 
 // ลบรายวิชา
-exports.deleteCourse = async (req, res) => {
+exports.deleteSubject = async (req, res) => {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: "รหัสอ้างอิงไม่ถูกต้อง" });
 
-    const course = await prisma.course.delete({ where: { id } });
-    res.json({ message: `ลบรายวิชา ${course.courseCode} สำเร็จ` });
+    const subject = await prisma.subject.delete({ where: { id } });
+    res.json({ message: `ลบรายวิชา ${subject.subjectCode} สำเร็จ` });
   } catch (err) {
     if (err.code === "P2025") return res.status(404).json({ message: "ไม่พบรายวิชา" });
     res.status(500).json({ message: "Internal Server Error" });
